@@ -5,6 +5,7 @@
 package snakegameinjava;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import javax.swing.ImageIcon;
 import java.awt.event.ActionListener;
 import java.awt.Font;
@@ -21,239 +22,198 @@ import javax.swing.Timer;
  * @author daniel
  */
 public class Grade extends JPanel implements ActionListener {
-   private final int WIDTH_ = 400;
-   private final int HEIGHT_ = 400;
-   private final int PIXEL_SIZE = 10;
-   private final int ALL_PIXELS = WIDTH_ * HEIGHT_;
-   private final int RANDOM_POSITION = 29;
-   private final int DELAY = 140;
-   
-   // definição do plano cartesiano(x,y) do jogo
-   private int[] x = new int[ALL_PIXELS];
-   private int[] y = new int[ALL_PIXELS];
-   
-   private int points;
-   
-   // posição comida
-   private int foodX;
-   private int foodY;
-   
-   // contar pontuação
-   private int totalScore = 0;
-   String scoreMessage = "Score: " + totalScore;
-   Font scoreFont = new Font("Consolas", Font.BOLD,12);
-   
-   // tamanho total do texto na tela
-   FontMetrics scoreMetrics = this.getFontMetrics(scoreFont);
-   
-   // movimentos na tela
-   private boolean left = false;
-   private boolean right = false;
-   private boolean up = false;
-   private boolean down = false;
+    private final int B_WIDTH = 300;
+    private final int B_HEIGHT = 300;
+    private final int DOT_SIZE = 10;
+    private final int ALL_DOTS = 900;
+    private final int RAND_POS = 29;
+    private final int DELAY = 140;
 
-    public boolean isLeft() {
-        return left;
-    }
+    private final int x[] = new int[ALL_DOTS];
+    private final int y[] = new int[ALL_DOTS];
 
-    public boolean isRight() {
-        return right;
-    }
+    private int dots;
+    private int apple_x;
+    private int apple_y;
 
-    public boolean isUp() {
-        return up;
-    }
+    public boolean leftDirection = false;
+    public boolean rightDirection = true;
+    public boolean upDirection = false;
+    public boolean downDirection = false;
+    public boolean inGame = true;
 
-    public boolean isDown() {
-        return down;
-    }
+    private Timer timer;
+    private Image ball;
+    private Image apple;
+    private Image head;
 
-    public void setLeft(boolean left) {
-        this.left = left;
-    }
-
-    public void setRight(boolean right) {
-        this.right = right;
-    }
-
-    public void setUp(boolean up) {
-        this.up = up;
-    }
-
-    public void setDown(boolean down) {
-        this.down = down;
-    }
-   
-   
-   // status do jogo
-   private boolean itsPlaying = true;
-   
-   // tempo de execução do jogo
-   private Timer time;
-   
-   // imagens da cabeça e corpo da snake e da comida
-   private Image ball;
-   private Image food;
-   private Image head;
-   
-   // Constructor
-   
-   public Grade(){
-       // Cria instrução no teclado
-       // necessário criar a classe TAdapter
-       addKeyListener(new TAdapter());
-       
-       setBackground(Color.lightGray);
-       
-       ImageIcon bola_ = new ImageIcon("Images/bola.png");
-       ball = bola_.getImage();
-       
-       ImageIcon food_ = new ImageIcon("apple.png");
-       food = food_.getImage();
-       
-       ImageIcon head_ = new ImageIcon("Images/cabeça.png");
-       head = head_.getImage();
-       
-       setFocusable(true);
-       
-       setSize(WIDTH_, HEIGHT_);
-       
-       initGame();
-   }
-
-    public void initGame() {
-        points = 3;
+    public Grade() {
         
-        for(int i = 0; i < points; i++){
-            x[i] = 50 - i * 10;
-            y[i] = 50;
-        }
-        
-        localFood();
-        
-        time = new Timer(DELAY,this);
-        time.start();
+        initBoard();
     }
     
-    @Override
-    public void paint(Graphics g){
-        super.paint(g);
+    private void initBoard() {
+
+        addKeyListener(new TAdapter());
+        setBackground(Color.black);
+        setFocusable(true);
+
+        setPreferredSize(new Dimension(B_WIDTH, B_HEIGHT));
+        loadImages();
+        initGame();
+    }
+
+    private void loadImages() {
+
+        ImageIcon iid = new ImageIcon("src/Images/bola.png");
+        ball = iid.getImage();
+
+        ImageIcon iia = new ImageIcon("src/Images/apple.png");
+        apple = iia.getImage();
+
+        ImageIcon iih = new ImageIcon("src/Images/cabeça.png");
+        head = iih.getImage();
+    }
+
+    private void initGame() {
+
+        dots = 3;
+
+        for (int z = 0; z < dots; z++) {
+            x[z] = 50 - z * 10;
+            y[z] = 50;
+        }
         
-        if(itsPlaying){
-            g.drawImage(food, foodX, foodY, this);
-            
-            for(int i = 0; i < points; i++){
-                if(i == 0){
-                    g.drawImage(head, x[i], y[i], this);
-                }else{
-                    g.drawImage(ball, x[i], y[i], this);
+        locateApple();
+
+        timer = new Timer(DELAY, this);
+        timer.start();
+    }
+
+    @Override
+    public void paintComponent(Graphics g) {
+        super.paintComponent(g);
+
+        doDrawing(g);
+    }
+    
+    private void doDrawing(Graphics g) {
+        
+        if (inGame) {
+
+            g.drawImage(apple, apple_x, apple_y, this);
+
+            for (int z = 0; z < dots; z++) {
+                if (z == 0) {
+                    g.drawImage(head, x[z], y[z], this);
+                } else {
+                    g.drawImage(ball, x[z], y[z], this);
                 }
             }
-            
-            drawScoreOnScreen(g);
-            
+
             Toolkit.getDefaultToolkit().sync();
-            
-            g.dispose();
-        }else{
-            GameOver(g);
+
+        } else {
+
+            gameOver(g);
+        }        
+    }
+
+    private void gameOver(Graphics g) {
+        
+        String msg = "Game Over";
+        Font small = new Font("Helvetica", Font.BOLD, 14);
+        FontMetrics metr = getFontMetrics(small);
+
+        g.setColor(Color.white);
+        g.setFont(small);
+        g.drawString(msg, (B_WIDTH - metr.stringWidth(msg)) / 2, B_HEIGHT / 2);
+    }
+
+    private void checkApple() {
+
+        if ((x[0] == apple_x) && (y[0] == apple_y)) {
+
+            dots++;
+            locateApple();
         }
     }
 
-    public void drawScoreOnScreen(Graphics g) {
-        scoreMessage = "Score: " + totalScore;
-        scoreMetrics = this.getFontMetrics(scoreFont);
-        
-        g.setColor(Color.WHITE);
-        g.setFont(scoreFont);
-        g.drawString(scoreMessage, (WIDTH_ - scoreMetrics.stringWidth(scoreMessage)) - 10, HEIGHT_ - 10);
-    }
-    
-    public void GameOver(Graphics g){
-        String message = "Game Over! Your score is: " + totalScore;
-        
-        Font shortFont = new Font("Consolas", Font.BOLD, 14);
-        
-        FontMetrics fontMetrics = this.getFontMetrics(shortFont);
-        
-        g.setColor(Color.white);
-        
-        g.setFont(shortFont);
-        
-        
-        g.drawString(message, (WIDTH_ - fontMetrics.stringWidth(message)) / 2, HEIGHT_ / 2);
-    }
-    
-    public void checkFood(){
-        if((x[0] == foodX) && (y[0] == foodY)){
-            points++;
-            totalScore++;
-            localFood();
+    private void move() {
+
+        for (int z = dots; z > 0; z--) {
+            x[z] = x[(z - 1)];
+            y[z] = y[(z - 1)];
+        }
+
+        if (leftDirection) {
+            x[0] -= DOT_SIZE;
+        }
+
+        if (rightDirection) {
+            x[0] += DOT_SIZE;
+        }
+
+        if (upDirection) {
+            y[0] -= DOT_SIZE;
+        }
+
+        if (downDirection) {
+            y[0] += DOT_SIZE;
         }
     }
-    
-    public void move(){
-        for(int i = points; i > 0; i--){
-            x[i] = x[(i - 1)];
-            y[i] = y[(i - 1)];
-        }
-        
-        if(left){
-            x[0] -= PIXEL_SIZE;
-        }
-        
-        if(right){
-            x[0] += PIXEL_SIZE;
-        }
-        
-        if(up){
-            y[0] -= PIXEL_SIZE;
-        }
-        
-        if(down){
-            y[0] += PIXEL_SIZE;
-        }
-    }
-    
-    public void checkCrashBoard(){
-        for(int i = points; i > 0; i--){
-            if((i > 4) && (x[0] == x[i]) && (y[0] == y[i])){
-                itsPlaying = false;
+
+    private void checkCollision() {
+
+        for (int z = dots; z > 0; z--) {
+
+            if ((z > 4) && (x[0] == x[z]) && (y[0] == y[z])) {
+                inGame = false;
             }
         }
-        
-        if(y[0] > HEIGHT_){
-            itsPlaying = false;
+
+        if (y[0] >= B_HEIGHT) {
+            inGame = false;
+        }
+
+        if (y[0] < 0) {
+            inGame = false;
+        }
+
+        if (x[0] >= B_WIDTH) {
+            inGame = false;
+        }
+
+        if (x[0] < 0) {
+            inGame = false;
         }
         
-        if(y[0] < 0){
-            itsPlaying = false;
-        }
-        
-        if(x[0] > WIDTH_){
-            itsPlaying = false;
-        }
-        
-        if(x[0] < 0){
-            itsPlaying = false;
+        if (!inGame) {
+            timer.stop();
         }
     }
-    
-    public void localFood(){
-        int random = (int) (Math.random() * RANDOM_POSITION);
-        foodX = (random * PIXEL_SIZE);
-        
-        random = (int) (Math.random() * RANDOM_POSITION);
-        foodY = (random * PIXEL_SIZE);
+
+    private void locateApple() {
+
+        int r = (int) (Math.random() * RAND_POS);
+        apple_x = ((r * DOT_SIZE));
+
+        r = (int) (Math.random() * RAND_POS);
+        apple_y = ((r * DOT_SIZE));
     }
-    
-    public void actionPerformed (ActionEvent e){
-        if(itsPlaying){
-            checkFood();
-            checkCrashBoard();
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+
+        if (inGame) {
+
+            checkApple();
+            checkCollision();
             move();
         }
-        
+
         repaint();
     }
 }
+
+

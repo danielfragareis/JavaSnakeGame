@@ -4,6 +4,7 @@
  */
 package snakegameinjava;
 
+import java.awt.EventQueue;
 import javax.swing.JFrame;
 
 /**
@@ -12,19 +13,28 @@ import javax.swing.JFrame;
  */
 public class Snake extends JFrame {
     
-    public Snake(){
+ public Snake() {
+        
+        initUI();
+    }
+    
+    private void initUI() {
+        
         add(new Grade());
-
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        setSize(420, 440);
-        
-        setLocationRelativeTo(null);
-        
-        setTitle("Snake Game");
         
         setResizable(false);
+        pack();
         
-        setVisible(true);
+        setTitle("Snake");
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    }
+    
+    public static void main(String[] args) {
+        
+        EventQueue.invokeLater(() -> {
+            JFrame ex = new Snake();
+            ex.setVisible(true);
+        });
     }
 }
