@@ -12,6 +12,7 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
@@ -38,8 +39,8 @@ public class Grade extends JPanel implements ActionListener {
    private int foodY;
    
    // contar pontuação
-   private int score = 0;
-   String scoreMessage = "Score: " + score;
+   private int totalScore = 0;
+   String scoreMessage = "Score: " + totalScore;
    Font scoreFont = new Font("Consolas", Font.BOLD,12);
    
    // tamanho total do texto na tela
@@ -104,13 +105,13 @@ public class Grade extends JPanel implements ActionListener {
        
        setBackground(Color.lightGray);
        
-       ImageIcon bola_ = new ImageIcon("bola.png");
+       ImageIcon bola_ = new ImageIcon("Images/bola.png");
        ball = bola_.getImage();
        
        ImageIcon food_ = new ImageIcon("apple.png");
        food = food_.getImage();
        
-       ImageIcon head_ = new ImageIcon("cabeça.png");
+       ImageIcon head_ = new ImageIcon("Images/cabeça.png");
        head = head_.getImage();
        
        setFocusable(true);
@@ -121,9 +122,9 @@ public class Grade extends JPanel implements ActionListener {
    }
 
     public void initGame() {
-        score = 3;
+        points = 3;
         
-        for(int i = 0; i < score; i++){
+        for(int i = 0; i < points; i++){
             x[i] = 50 - i * 10;
             y[i] = 50;
         }
@@ -141,7 +142,7 @@ public class Grade extends JPanel implements ActionListener {
         if(itsPlaying){
             g.drawImage(food, foodX, foodY, this);
             
-            for(int i = 0; i < score; i++){
+            for(int i = 0; i < points; i++){
                 if(i == 0){
                     g.drawImage(head, x[i], y[i], this);
                 }else{
@@ -159,11 +160,100 @@ public class Grade extends JPanel implements ActionListener {
         }
     }
 
-    private void drawScoreOnScreen(Graphics g) {
-        scoreMessage = "Score: " + score;
+    public void drawScoreOnScreen(Graphics g) {
+        scoreMessage = "Score: " + totalScore;
         scoreMetrics = this.getFontMetrics(scoreFont);
         
         g.setColor(Color.WHITE);
         g.setFont(scoreFont);
+        g.drawString(scoreMessage, (WIDTH_ - scoreMetrics.stringWidth(scoreMessage)) - 10, HEIGHT_ - 10);
+    }
+    
+    public void GameOver(Graphics g){
+        String message = "Game Over! Your score is: " + totalScore;
+        
+        Font shortFont = new Font("Consolas", Font.BOLD, 14);
+        
+        FontMetrics fontMetrics = this.getFontMetrics(shortFont);
+        
+        g.setColor(Color.white);
+        
+        g.setFont(shortFont);
+        
+        
+        g.drawString(message, (WIDTH_ - fontMetrics.stringWidth(message)) / 2, HEIGHT_ / 2);
+    }
+    
+    public void checkFood(){
+        if((x[0] == foodX) && (y[0] == foodY)){
+            points++;
+            totalScore++;
+            localFood();
+        }
+    }
+    
+    public void move(){
+        for(int i = points; i > 0; i--){
+            x[i] = x[(i - 1)];
+            y[i] = y[(i - 1)];
+        }
+        
+        if(left){
+            x[0] -= PIXEL_SIZE;
+        }
+        
+        if(right){
+            x[0] += PIXEL_SIZE;
+        }
+        
+        if(up){
+            y[0] -= PIXEL_SIZE;
+        }
+        
+        if(down){
+            y[0] += PIXEL_SIZE;
+        }
+    }
+    
+    public void checkCrashBoard(){
+        for(int i = points; i > 0; i--){
+            if((i > 4) && (x[0] == x[i]) && (y[0] == y[i])){
+                itsPlaying = false;
+            }
+        }
+        
+        if(y[0] > HEIGHT_){
+            itsPlaying = false;
+        }
+        
+        if(y[0] < 0){
+            itsPlaying = false;
+        }
+        
+        if(x[0] > WIDTH_){
+            itsPlaying = false;
+        }
+        
+        if(x[0] < 0){
+            itsPlaying = false;
+        }
+    }
+    
+    public void localFood(){
+        int random = (int) (Math.random() * RANDOM_POSITION);
+        foodX = (random * PIXEL_SIZE);
+        
+        random = (int) (Math.random() * RANDOM_POSITION);
+        foodY = (random * PIXEL_SIZE);
+    }
+    
+    public void actionPerformed (ActionEvent e){
+        if(itsPlaying){
+            checkFood();
+            checkCrashBoard();
+            move();
+        }
+        
+        repaint();
     }
 }
